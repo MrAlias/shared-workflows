@@ -301,6 +301,7 @@ class OwnedExecutionTest(unittest.TestCase):
                     {"itemKey": claim.item_key, "outcome": "success"},
                 ])) as process,
                 mock.patch.object(drain_queue, "acknowledge_results"),
+                mock.patch.dict(os.environ, {"DATA_BRANCH_SNAPSHOTS": "true"}, clear=True),
             ):
                 dispatch = mock.Mock()
                 drain_queue.process_claim_wave(
@@ -319,6 +320,7 @@ class OwnedExecutionTest(unittest.TestCase):
             # Omitting config_path deliberately uses the current worker's configuration.
             self.assertNotIn("config_path", process.call_args.kwargs)
             self.assertNotIn("PR_DASHBOARD_PRIVATE_KEY", process.call_args.kwargs["processor_env"])
+            self.assertEqual(process.call_args.kwargs["processor_env"]["DATA_BRANCH_SNAPSHOTS"], "true")
 
     def test_owned_wave_requires_an_isolated_checkout_before_processing(self) -> None:
         claim = Claim("example#pr:1", 1, "example", 1, "", 0)

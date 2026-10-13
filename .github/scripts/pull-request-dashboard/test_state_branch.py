@@ -83,7 +83,7 @@ class AcceptedStateDirTest(unittest.TestCase):
 
 
 class LegacyPublisherLockCleanupTest(unittest.TestCase):
-    @patch.object(state_branch, "checkout_state")
+    @patch.object(state_branch, "checkout_state", return_value="")
     @patch.object(state_branch, "configure_git")
     def test_worker_update_removes_legacy_lock_without_waiting(
         self,
@@ -109,7 +109,7 @@ class LegacyPublisherLockCleanupTest(unittest.TestCase):
         self.assertEqual(1, status)
 
     @patch.object(state_branch, "push_state")
-    @patch.object(state_branch, "checkout_state")
+    @patch.object(state_branch, "checkout_state", return_value="")
     @patch.object(state_branch, "configure_git")
     def test_narrow_update_commits_legacy_lock_deletion(
         self,
@@ -136,7 +136,7 @@ class LegacyPublisherLockCleanupTest(unittest.TestCase):
                 state_file.write_text('{"revision":2}\n', encoding="utf-8")
                 return 0
 
-            def inspect_pushed_commit(_state_dir: Path, _state_branch: str) -> bool:
+            def inspect_pushed_commit(_state_dir: Path, _state_branch: str, _expected_sha: str) -> bool:
                 changed_paths = run_git(
                     state_dir,
                     "diff-tree",
@@ -163,7 +163,7 @@ class LegacyPublisherLockCleanupTest(unittest.TestCase):
             )
 
         self.assertEqual(0, status)
-        push_state.assert_called_once_with(state_dir, "state-branch")
+        push_state.assert_called_once_with(state_dir, "state-branch", "")
 
 
 class FetchStateBranchTest(unittest.TestCase):
@@ -217,24 +217,28 @@ class FetchStateBranchTest(unittest.TestCase):
                         "git",
                         "fetch",
                         "--no-write-fetch-head",
+                        "--refmap=",
                         "origin",
                         "state-branch:refs/temp/fetch",
                     ],
                     capture_output=True,
                     text=True,
                     check=False,
+                    creationflags=state_branch.SUBPROCESS_FLAGS,
                 ),
                 call(
                     [
                         "git",
                         "fetch",
                         "--no-write-fetch-head",
+                        "--refmap=",
                         "origin",
                         "state-branch:refs/temp/fetch",
                     ],
                     capture_output=True,
                     text=True,
                     check=False,
+                    creationflags=state_branch.SUBPROCESS_FLAGS,
                 ),
             ],
             subprocess_run.call_args_list,
@@ -289,12 +293,14 @@ class FetchStateBranchTest(unittest.TestCase):
                         "git",
                         "fetch",
                         "--no-write-fetch-head",
+                        "--refmap=",
                         "origin",
                         "state-branch:refs/temp/fetch",
                     ],
                     capture_output=True,
                     text=True,
                     check=False,
+                    creationflags=state_branch.SUBPROCESS_FLAGS,
                 )
             ]
             * 4,
@@ -335,12 +341,14 @@ class FetchStateBranchTest(unittest.TestCase):
                 "git",
                 "fetch",
                 "--no-write-fetch-head",
+                "--refmap=",
                 "origin",
                 "state-branch:refs/temp/fetch",
             ],
             capture_output=True,
             text=True,
             check=False,
+            creationflags=state_branch.SUBPROCESS_FLAGS,
         )
         sleep.assert_not_called()
         run.assert_called_once_with(
@@ -374,12 +382,14 @@ class FetchStateBranchTest(unittest.TestCase):
                 "git",
                 "fetch",
                 "--no-write-fetch-head",
+                "--refmap=",
                 "origin",
                 "state-branch:refs/temp/fetch",
             ],
             capture_output=True,
             text=True,
             check=False,
+            creationflags=state_branch.SUBPROCESS_FLAGS,
         )
         sleep.assert_not_called()
         run.assert_called_once_with(
@@ -416,6 +426,7 @@ class FetchStateBranchTest(unittest.TestCase):
                 "git",
                 "fetch",
                 "--no-write-fetch-head",
+                "--refmap=",
                 "origin",
                 "state-branch:refs/temp/fetch",
             ],
